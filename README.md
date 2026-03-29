@@ -25,5 +25,3 @@ Implementação do jogo de tabuleiro **Dara** em modo **dois jogadores em rede**
    ```
 
 Quando o **segundo** jogador conecta, a partida começa automaticamente.
-
-Para mais detalhes sobre arquitetura, protocolo e funções, consulte o arquivo **`explicacao.md`** na raiz do repositório.

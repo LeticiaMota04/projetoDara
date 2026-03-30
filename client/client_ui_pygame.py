@@ -83,10 +83,11 @@ class DaraPygameClient:
         self.font_modal_title = make_font(28)
         self.font_modal_btn = make_font(22)
 
-    def connect(self) -> bool:
+    def connect(self, server_host: str | None = None) -> bool:
+        host = server_host if server_host is not None else HOST
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            sock.connect((HOST, PORT))
+            sock.connect((host, PORT))
         except Exception as e:
             self.connection_error = str(e)
             return False
@@ -412,10 +413,14 @@ class DaraPygameClient:
 
 def main():
     pygame.init()
+    server_host = sys.argv[1] if len(sys.argv) > 1 else HOST
     game = DaraPygameClient()
-    if not game.connect():
+    if not game.connect(server_host):
         print("Não foi possível conectar ao servidor:", game.connection_error)
         print("Inicie o servidor com: python server/server.py")
+        print(
+            "De outra máquina ou VM: python client/client_ui_pygame.py <IP_DO_SERVIDOR>"
+        )
         pygame.quit()
         sys.exit(1)
 

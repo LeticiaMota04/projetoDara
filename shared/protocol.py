@@ -9,6 +9,10 @@ def send_message(sock, data: dict) -> None:
 
 
 def receive_message(sock):
+    """
+    Lê uma mensagem JSON por vez. Várias mensagens no mesmo pacote TCP
+    são separadas por '\\n' (evita json.loads falhar e travar o cliente).
+    """
     sid = id(sock)
     buf = _recv_buffers.get(sid, b"")
 

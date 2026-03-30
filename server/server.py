@@ -24,6 +24,50 @@ game_lock = threading.Lock()
 game = DaraGame()
 
 
+def _ipv4_addresses_for_hints():
+    seen: list[str] = []
+    try:
+        hostname = socket.gethostname()
+        _, _, addrs = socket.gethostbyname_ex(hostname)
+        for a in addrs:
+            if not a.startswith("127.") and a not in seen:
+                seen.append(a)
+    except OSError:
+        pass
+    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        probe.connect(("198.51.100.1", 1))
+        ip = probe.getsockname()[0]
+        if not ip.startswith("127.") and ip not in seen:
+            seen.append(ip)
+    except OSError:
+        pass
+    finally:
+        probe.close()
+    return seen
+
+
+def _print_connection_hints():
+    print(
+        "Cliente em outro PC ou VM: use o IP desta máquina (não use localhost no cliente remoto)."
+    )
+    ips = _ipv4_addresses_for_hints()
+    if ips:
+        print("Alguns IPv4 locais:", ", ".join(ips))
+    print(
+        "VirtualBox com rede NAT: no Linux guest o host costuma ser 10.0.2.2 — "
+        "tente: python client/client_ui_pygame.py 10.0.2.2"
+    )
+    print(
+        "Se ainda falhar, libere a porta TCP 5001 no Firewall do Windows "
+        "(regra de entrada para Python ou para a porta 5001)."
+    )
+
+
+# -------------------------------
+# UTIL
+# -------------------------------
+
 def game_state_message():
     return {
         "type": "game_state",
@@ -44,6 +88,10 @@ def broadcast(message):
 def send_to_player(player_conn, message):
     send_message(player_conn, message)
 
+
+# -------------------------------
+# GAME CONTROL
+# -------------------------------
 
 def start_game():
     print("Iniciando partida!")
@@ -91,6 +139,9 @@ def handle_message(conn, player_id, message):
     if msg_type == "restart_game":
         return
 
+    # -------------------------------
+    # PLACE PIECE
+    # -------------------------------
     if msg_type == "place_piece":
 
         success = game.place_piece(
@@ -107,6 +158,9 @@ def handle_message(conn, player_id, message):
 
             broadcast(game_state_message())
 
+    # -------------------------------
+    # MOVE PIECE
+    # -------------------------------
     elif msg_type == "move_piece":
 
         success = game.move_piece(
@@ -126,6 +180,9 @@ def handle_message(conn, player_id, message):
 
             broadcast(game_state_message())
 
+    # -------------------------------
+    # CAPTURE PIECE
+    # -------------------------------
     elif msg_type == "capture_piece":
 
         success = game.capture_piece(
@@ -152,6 +209,9 @@ def handle_message(conn, player_id, message):
             else:
                 broadcast(game_state_message())
 
+    # -------------------------------
+    # CHAT
+    # -------------------------------
     elif msg_type == "chat":
 
         broadcast({
@@ -162,6 +222,9 @@ def handle_message(conn, player_id, message):
             }
         })
 
+    # -------------------------------
+    # RESIGN
+    # -------------------------------
     elif msg_type == "resign":
 
         winner = PLAYER2 if player_id == PLAYER1 else PLAYER1
@@ -172,6 +235,9 @@ def handle_message(conn, player_id, message):
         })
 
 
+# -------------------------------
+# CLIENT HANDLER
+# -------------------------------
 
 def handle_client(conn, addr, player_id):
 
@@ -200,6 +266,9 @@ def handle_client(conn, addr, player_id):
                 players.remove(conn)
 
 
+# -------------------------------
+# SERVER START
+# -------------------------------
 
 def start_server():
 
@@ -208,6 +277,7 @@ def start_server():
     server.listen(MAX_PLAYERS)
 
     print(f"Servidor iniciado em {HOST}:{PORT}")
+    _print_connection_hints()
 
     while True:
 

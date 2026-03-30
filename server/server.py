@@ -24,10 +24,6 @@ game_lock = threading.Lock()
 game = DaraGame()
 
 
-# -------------------------------
-# UTIL
-# -------------------------------
-
 def game_state_message():
     return {
         "type": "game_state",
@@ -48,10 +44,6 @@ def broadcast(message):
 def send_to_player(player_conn, message):
     send_message(player_conn, message)
 
-
-# -------------------------------
-# GAME CONTROL
-# -------------------------------
 
 def start_game():
     print("Iniciando partida!")
@@ -99,9 +91,6 @@ def handle_message(conn, player_id, message):
     if msg_type == "restart_game":
         return
 
-    # -------------------------------
-    # PLACE PIECE
-    # -------------------------------
     if msg_type == "place_piece":
 
         success = game.place_piece(
@@ -118,9 +107,6 @@ def handle_message(conn, player_id, message):
 
             broadcast(game_state_message())
 
-    # -------------------------------
-    # MOVE PIECE
-    # -------------------------------
     elif msg_type == "move_piece":
 
         success = game.move_piece(
@@ -140,9 +126,6 @@ def handle_message(conn, player_id, message):
 
             broadcast(game_state_message())
 
-    # -------------------------------
-    # CAPTURE PIECE
-    # -------------------------------
     elif msg_type == "capture_piece":
 
         success = game.capture_piece(
@@ -169,9 +152,6 @@ def handle_message(conn, player_id, message):
             else:
                 broadcast(game_state_message())
 
-    # -------------------------------
-    # CHAT
-    # -------------------------------
     elif msg_type == "chat":
 
         broadcast({
@@ -182,9 +162,6 @@ def handle_message(conn, player_id, message):
             }
         })
 
-    # -------------------------------
-    # RESIGN
-    # -------------------------------
     elif msg_type == "resign":
 
         winner = PLAYER2 if player_id == PLAYER1 else PLAYER1
@@ -195,9 +172,6 @@ def handle_message(conn, player_id, message):
         })
 
 
-# -------------------------------
-# CLIENT HANDLER
-# -------------------------------
 
 def handle_client(conn, addr, player_id):
 
@@ -226,9 +200,6 @@ def handle_client(conn, addr, player_id):
                 players.remove(conn)
 
 
-# -------------------------------
-# SERVER START
-# -------------------------------
 
 def start_server():
 
